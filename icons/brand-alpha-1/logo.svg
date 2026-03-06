@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" width="120" height="40">
+  <rect x="0" y="8" width="12" height="24" rx="2" fill="#e85d00"/>
+  <rect x="18" y="4" width="12" height="32" rx="2" fill="#e85d00" opacity="0.85"/>
+  <rect x="36" y="0" width="12" height="40" rx="2" fill="#e85d00" opacity="0.7"/>
+  <rect x="54" y="4" width="12" height="32" rx="2" fill="#e85d00" opacity="0.85"/>
+  <rect x="72" y="8" width="12" height="24" rx="2" fill="#e85d00"/>
+  <text x="96" y="28" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#331e00">Alpha</text>
+</svg>

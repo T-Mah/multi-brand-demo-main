@@ -6,6 +6,7 @@ import {
   decorateSections,
   decorateBlocks,
   decorateTemplateAndTheme,
+  getMetadata,
   waitForFirstImage,
   loadSection,
   loadSections,
@@ -130,9 +131,20 @@ export function decorateMain(main) {
  * Loads everything needed to get to LCP.
  * @param {Element} doc The container element
  */
+/**
+ * Loads brand theme CSS when theme metadata is present.
+ */
+function loadThemeStyles() {
+  const theme = getMetadata('theme')?.trim();
+  if (theme) {
+    loadCSS(`${window.hlx.codeBasePath}/styles/${theme}.css`);
+  }
+}
+
 async function loadEager(doc) {
   document.documentElement.lang = 'en';
   decorateTemplateAndTheme();
+  loadThemeStyles();
   const main = doc.querySelector('main');
   if (main) {
     decorateMain(main);

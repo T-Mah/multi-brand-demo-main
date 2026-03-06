@@ -1,0 +1,52 @@
+/*
+ * Brand Alpha 1 - Orange Theme
+ * Overrides base design tokens for brand-alpha-1
+ */
+
+body.brand-alpha-1 {
+  /* Orange theme colors */
+  --background-color: #fffaf5;
+  --light-color: #fff3e6;
+  --dark-color: #663c00;
+  --text-color: #331e00;
+  --link-color: #e85d00;
+  --link-hover-color: #c44d00;
+}
+
+/* Accent sections with warm orange tint */
+body.brand-alpha-1 main .section.light,
+body.brand-alpha-1 main .section.highlight {
+  background-color: var(--light-color);
+}
+
+/* Primary buttons - orange */
+body.brand-alpha-1 a.button.primary,
+body.brand-alpha-1 button.button.primary {
+  border-color: var(--link-color);
+  background-color: var(--link-color);
+  color: white;
+}
+
+body.brand-alpha-1 a.button.primary:hover,
+body.brand-alpha-1 a.button.primary:focus-visible,
+body.brand-alpha-1 button.button.primary:hover,
+body.brand-alpha-1 button.button.primary:focus-visible {
+  border-color: var(--link-hover-color);
+  background-color: var(--link-hover-color);
+}
+
+/* Accent buttons - darker orange */
+body.brand-alpha-1 a.button.accent,
+body.brand-alpha-1 button.button.accent {
+  border-color: #c44d00;
+  background-color: #c44d00;
+  color: white;
+}
+
+body.brand-alpha-1 a.button.accent:hover,
+body.brand-alpha-1 a.button.accent:focus-visible,
+body.brand-alpha-1 button.button.accent:hover,
+body.brand-alpha-1 button.button.accent:focus-visible {
+  border-color: #a34100;
+  background-color: #a34100;
+}
