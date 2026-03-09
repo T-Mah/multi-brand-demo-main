@@ -420,3 +420,153 @@ For each new branded site using submodules:
 | **Authoring** | UE editing works for `/content/<brand-id>/...` pages. |
 | **EDS preview/live** | `https://main--<brand-id>--your-org.aem.page` shows correct branding. |
 | | Publishing in UE updates EDS site as expected. |
+
+---
+
+## Appendix A: Git Workflow
+
+This section documents the Git steps for the main repo, submodules, and how to make and commit changes in each.
+
+### Repository structure
+
+| Repo | Path | Purpose |
+|------|------|---------|
+| **Main (EDS base)** | Project root | Blocks, scripts, shared styles, theme loader, submodule references |
+| **Submodule (brand)** | `vendor/brand-alpha-1/` | Brand-specific styles, theme CSS, icons |
+
+The main repo stores a **pointer** (commit hash) to the submodule. It does not store the submodule's files directly.
+
+---
+
+### Initial clone (new developer)
+
+```bash
+# Clone the main repo
+git clone https://github.com/your-org/multi-brand-demo.git
+cd multi-brand-demo
+
+# Initialize and fetch submodules (required!)
+git submodule update --init --recursive
+
+# Install dependencies and sync brand styles
+npm install
+npm run sync:brands
+```
+
+---
+
+### Making changes to the submodule (brand-alpha-1)
+
+When you edit files in `vendor/brand-alpha-1/` (e.g. `styles/theme.css`, `icons/`):
+
+```bash
+# 1. Navigate into the submodule
+cd vendor/brand-alpha-1
+
+# 2. Check status
+git status
+
+# 3. Stage your changes
+git add styles/theme.css icons/search.svg icons/logo.svg
+# or: git add .
+
+# 4. Commit in the submodule
+git commit -m "Add orange theme and brand assets"
+
+# 5. Push to the brand repo
+git push origin main
+
+# 6. Go back to main repo and update the submodule pointer
+cd ../..
+git add vendor/brand-alpha-1
+git commit -m "Update brand-alpha-1 submodule to latest"
+git push origin main
+```
+
+**Important:** You must commit and push in the submodule first, then commit the updated pointer in the main repo. Both repos need to be pushed for changes to be fully saved.
+
+---
+
+### Making changes to the main repo
+
+When you edit files in the main project (e.g. `scripts/`, `blocks/`, `head.html`, `styles/styles.css`):
+
+```bash
+# 1. Ensure you're in the main repo root (not inside vendor/)
+cd /path/to/multi-brand-demo-main
+
+# 2. Check status (submodule may show as modified if its pointer changed)
+git status
+
+# 3. Stage your changes
+git add scripts/scripts.js head.html
+# or: git add .
+
+# 4. Commit
+git commit -m "Add theme loader and wire brand-alpha-1 theme"
+
+# 5. Push
+git push origin main
+```
+
+**Note:** If you only changed files in the main repo (not in the submodule), you do not need to touch the submodule. If you also updated the submodule, follow the submodule workflow above and include `vendor/brand-alpha-1` in your main repo commit.
+
+---
+
+### Pulling latest changes
+
+**Main repo only:**
+
+```bash
+git pull origin main
+git submodule update --init --recursive
+npm run sync:brands
+```
+
+**When the brand repo has new commits** (e.g. brand team pushed changes):
+
+```bash
+cd vendor/brand-alpha-1
+git pull origin main
+cd ../..
+git add vendor/brand-alpha-1
+git commit -m "Update brand-alpha-1 submodule to latest"
+git push origin main
+```
+
+---
+
+### Quick reference
+
+| Task | Commands |
+|------|----------|
+| **Edit submodule** | `cd vendor/brand-alpha-1` → edit → `git add` → `git commit` → `git push` |
+| **Update main to point at new submodule commit** | `cd ../..` → `git add vendor/brand-alpha-1` → `git commit` → `git push` |
+| **Edit main repo** | Edit at root → `git add` → `git commit` → `git push` |
+| **After any clone/pull** | `git submodule update --init --recursive` then `npm run sync:brands` |
+
+---
+
+### Troubleshooting: index.lock error
+
+If you see:
+
+```
+fatal: Unable to create '.../index.lock': File exists.
+Another git process seems to be running...
+```
+
+1. Close other Git processes (IDE, terminals, Git GUI).
+2. Remove the lock file manually:
+
+   **PowerShell:**
+   ```powershell
+   Remove-Item ".git\modules\vendor\brand-alpha-1\index.lock" -Force
+   ```
+
+   **Bash:**
+   ```bash
+   rm .git/modules/vendor/brand-alpha-1/index.lock
+   ```
+
+3. Retry your `git add` or `git commit`.
