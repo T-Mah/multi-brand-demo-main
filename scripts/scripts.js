@@ -137,7 +137,7 @@ export function decorateMain(main) {
 function loadThemeStyles() {
   const theme = getMetadata('theme')?.trim();
   if (theme) {
-    loadCSS(`${window.hlx.codeBasePath}/styles/${theme}.css`);
+    loadCSS(`${window.hlx.codeBasePath}/vendor/${theme}/styles/theme.css`);
   }
 }
 

@@ -106,49 +106,11 @@ Typical pattern:
 - `vendor/humira-theme/styles/theme.css` → `styles/humira-theme.css`
 - `vendor/rinvoq-theme/styles/theme.css` → `styles/rinvoq-theme.css`
 
-### 2.2 Add a small build step to copy brand CSS
+### 2.2 Load theme CSS directly from vendor
 
-Create `scripts/sync-brand-styles.mjs` in eds-base:
+Theme CSS is loaded at runtime from `vendor/{theme}/styles/theme.css`. No build or sync step is required. The theme loader (see section 3.3) uses this path when theme metadata is present.
 
-```javascript
-// scripts/sync-brand-styles.mjs
-import { copyFileSync, mkdirSync } from 'fs';
-import { resolve } from 'path';
-
-const brands = [
-  { name: 'humira-theme', src: 'vendor/humira-theme/styles/theme.css' },
-  { name: 'rinvoq-theme',  src: 'vendor/rinvoq-theme/styles/theme.css' },
-];
-
-const stylesDir = resolve('styles');
-mkdirSync(stylesDir, { recursive: true });
-
-brands.forEach((brand) => {
-  const src = resolve(brand.src);
-  const dest = resolve(stylesDir, `${brand.name}.css`);
-  copyFileSync(src, dest);
-  console.log(`Synced ${src} → ${dest}`);
-});
-```
-
-Update `package.json`:
-
-```json
-{
-  "scripts": {
-    "sync:brands": "node ./scripts/sync-brand-styles.mjs",
-    "build": "npm run sync:brands && <your-existing-build-script>"
-  }
-}
-```
-
-Now any local build or CI build can run:
-
-```bash
-npm run sync:brands
-```
-
-and your `styles/` folder will contain brand CSS copied from submodules.
+**Brand icons:** Blocks needing theme-specific icons can reference `/vendor/{theme}/icons/{name}.svg` (e.g. `/vendor/brand-alpha-1/icons/logo.svg`). The default `decorateIcon()` from aem.js loads from `/icons/` and cannot be overridden.
 
 ---
 
@@ -237,7 +199,7 @@ window.addEventListener('load', () => {
 Commit:
 
 ```bash
-git add scripts/theme.js styles/ scripts/sync-brand-styles.mjs package.json
+git add scripts/theme.js styles/ package.json
 git commit -m "Wire brand submodule styles and dynamic theme loading"
 git push origin main
 ```
@@ -364,8 +326,9 @@ git clone git@github.com:abbvie/abbvie-nextgen-eds.git
 cd eds-base
 git submodule update --init --recursive
 npm install
-npm run sync:brands
 ```
+
+Theme CSS loads directly from `vendor/{theme}/styles/theme.css` at runtime. No sync step required.
 
 ### In CI (GitHub Actions, etc.)
 
@@ -377,9 +340,6 @@ npm run sync:brands
 
 - name: Install
   run: npm ci
-
-- name: Sync brand styles
-  run: npm run sync:brands
 
 - name: Build
   run: npm run build
@@ -410,8 +370,8 @@ For each new branded site using submodules:
 |------|-------|
 | **Brand repo** | Has `styles/theme.css` scoped to `.theme-brand-<id>` or variables. |
 | **EDS base repo** | Submodule added under `vendor/<brand>/`. |
-| | `scripts/sync-brand-styles.mjs` copies `theme.css` to `styles/<brand>.css`. |
-| | `applyTheme()` loads `/styles/<brand>.css` and adds body class. |
+| | Theme loads from `vendor/<brand>/styles/theme.css` at runtime. |
+| | `applyTheme()` or theme loader adds body class and loads theme CSS. |
 | **Edge Delivery (Cloud Manager)** | New site created (`brand-id`) pointing to eds-base repo. |
 | **AEM (Crosswalk)** | Site created from template (`/content/<brand-id>`). |
 | | Edge Delivery Services config set to project type = aem.live with repoless and site name set. |
@@ -448,10 +408,11 @@ cd multi-brand-demo
 # Initialize and fetch submodules (required!)
 git submodule update --init --recursive
 
-# Install dependencies and sync brand styles
+# Install dependencies
 npm install
-npm run sync:brands
 ```
+
+Theme CSS loads directly from the vendor submodule at runtime. No sync step required.
 
 ---
 
@@ -520,7 +481,7 @@ git push origin main
 ```bash
 git pull origin main
 git submodule update --init --recursive
-npm run sync:brands
+npm install
 ```
 
 **When the brand repo has new commits** (e.g. brand team pushed changes):
@@ -543,7 +504,51 @@ git push origin main
 | **Edit submodule** | `cd vendor/brand-alpha-1` → edit → `git add` → `git commit` → `git push` |
 | **Update main to point at new submodule commit** | `cd ../..` → `git add vendor/brand-alpha-1` → `git commit` → `git push` |
 | **Edit main repo** | Edit at root → `git add` → `git commit` → `git push` |
-| **After any clone/pull** | `git submodule update --init --recursive` then `npm run sync:brands` |
+| **After any clone/pull** | `git submodule update --init --recursive` then `npm install` |
+
+---
+
+## Appendix B: End-to-End Process
+
+### Making changes to an existing brand (e.g. brand-alpha-1)
+
+| Step | Who | Action |
+|------|-----|--------|
+| 1 | Brand team | Clone brand repo: `git clone https://github.com/T-Mah/brand-alpha-1.git` |
+| 2 | Brand team | Edit `styles/theme.css`, `icons/`, etc. |
+| 3 | Brand team | Commit and push: `git add .` → `git commit -m "..."` → `git push origin main` |
+| 4 | Platform team | In main repo: `cd vendor/brand-alpha-1` → `git pull origin main` |
+| 5 | Platform team | `cd ../..` → `git add vendor/brand-alpha-1` → `git commit -m "Update brand-alpha-1 submodule"` → `git push origin main` |
+
+Theme CSS loads from `vendor/brand-alpha-1/styles/theme.css` at runtime. No sync step required.
+
+---
+
+### Adding a new brand (e.g. brand-beta-2)
+
+| Step | Who | Action |
+|------|-----|--------|
+| 1 | Brand team | Create brand repo with `styles/theme.css` (and optional `icons/`) |
+| 2 | Platform team | Add submodule: `git submodule add https://github.com/org/brand-beta-2.git vendor/brand-beta-2` |
+| 3 | Platform team | Commit: `git add .gitmodules vendor/` → `git commit -m "Add brand-beta-2 submodule"` → `git push` |
+| 4 | AEM / config | Set theme metadata for the new site: `<meta name="theme" content="brand-beta-2">` |
+
+No changes to `scripts.js` are required. The theme loader uses `vendor/${theme}/styles/theme.css` dynamically.
+
+---
+
+### Brand repo structure (required)
+
+Each brand repo must have:
+
+```
+brand-xyz/
+  styles/
+    theme.css    # Required – CSS overrides scoped to body.brand-xyz
+  icons/         # Optional – logo.svg, search.svg, etc.
+```
+
+The `theme.css` file should scope overrides to the body class matching the theme name (e.g. `body.brand-beta-2`).
 
 ---
 
