@@ -133,12 +133,18 @@ export function decorateMain(main) {
  */
 /**
  * Loads brand theme CSS when theme metadata is present.
+ * Loads from vendor/{theme}/styles/theme.css (no sync step required).
  */
 function loadThemeStyles() {
   const theme = getMetadata('theme')?.trim();
-  if (theme) {
-    loadCSS(`${window.hlx.codeBasePath}/vendor/${theme}/styles/theme.css`);
-  }
+  if (!theme) return;
+
+  const base = (window.hlx?.codeBasePath || '').replace(/\/$/, '');
+  const href = `${base}/vendor/${theme}/styles/theme.css`;
+  loadCSS(href).catch((err) => {
+    // eslint-disable-next-line no-console
+    console.warn(`Theme CSS not loaded for "${theme}":`, err);
+  });
 }
 
 async function loadEager(doc) {

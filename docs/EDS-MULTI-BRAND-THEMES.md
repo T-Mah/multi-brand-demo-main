@@ -131,7 +131,6 @@ Alternatively, you can add `class="theme-brand-alpha"` on `<body>`. This guide u
 ### 3.2 Theme CSS structure
 
 In `styles/styles.css`:
-
 ```css
 :root {
   --color-primary: #0044cc;
